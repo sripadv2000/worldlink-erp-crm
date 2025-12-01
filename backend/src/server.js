@@ -14,15 +14,29 @@ if (major < 20) {
 require('dotenv').config({ path: '.env' });
 require('dotenv').config({ path: '.env.local' });
 
-mongoose.connect(process.env.DATABASE);
+// MongoDB connection with better error handling for Cloud Run
+if (!process.env.DATABASE) {
+  console.error('❌ DATABASE environment variable is not set!');
+  process.exit(1);
+}
+
+mongoose.connect(process.env.DATABASE, {
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+});
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 mongoose.connection.on('error', (error) => {
-  console.log(
-    `1. 🔥 Common Error caused issue → : check your .env file first and add your mongodb url`
+  console.error(
+    `1. 🔥 MongoDB Connection Error → check your .env file and DATABASE variable`
   );
-  console.error(`2. 🚫 Error → : ${error.message}`);
+  console.error(`2. 🚫 Error Details → ${error.message}`);
+});
+
+mongoose.connection.once('open', () => {
+  console.log('✅ MongoDB Connected Successfully');
 });
 
 const modelsFiles = globSync('./src/models/**/*.js');
@@ -33,7 +47,30 @@ for (const filePath of modelsFiles) {
 
 // Start our app!
 const app = require('./app');
-app.set('port', process.env.PORT || 8888);
-const server = app.listen(app.get('port'), () => {
-  console.log(`Express running → On PORT : ${server.address().port}`);
+
+// Cloud Run sets PORT environment variable
+const PORT = parseInt(process.env.PORT) || 8080;
+app.set('port', PORT);
+
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Express server running on PORT: ${PORT}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 MongoDB: ${process.env.DATABASE ? 'Connected' : 'Not configured'}`);
+});
+
+// Graceful shutdown for Cloud Run
+process.on('SIGTERM', () => {
+  console.log('⚠️  SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('✅ HTTP server closed');
+    mongoose.connection.close(false, () => {
+      console.log('✅ MongoDB connection closed');
+      process.exit(0);
+    });
+  });
+});
+
+// Handle unhandled rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err);
 });
