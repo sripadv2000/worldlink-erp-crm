@@ -31,15 +31,13 @@ async function seedInvoices() {
     console.log(colors.cyan(`📊 Creating ${count} invoices...\n`));
 
     for (let i = 0; i < count; i++) {
+      let invoice;
       try {
-        // Pick a random client
         const client = clients[Math.floor(Math.random() * clients.length)];
-
-        // Generate invoice data
         const invoiceNumber = 1000 + i + 1;
         const currentDate = new Date();
         const expiredDate = new Date();
-        expiredDate.setDate(currentDate.getDate() + 30); // 30 days from now
+        expiredDate.setDate(currentDate.getDate() + 30);
 
         const items = [
           {
@@ -47,7 +45,7 @@ async function seedInvoices() {
             description: 'Consulting and implementation services',
             quantity: Math.floor(Math.random() * 10) + 1,
             price: (Math.floor(Math.random() * 500) + 100),
-            total: 0, // Will be calculated
+            total: 0,
           },
           {
             itemName: 'Software License',
@@ -63,28 +61,17 @@ async function seedInvoices() {
           item.total = item.quantity * item.price;
         });
 
-        const subTotal = items.reduce((sum, item) => sum + item.total, 0);
-        const taxRate = 10; // 10% tax
-        const taxTotal = (subTotal * taxRate) / 100;
-        const total = subTotal + taxTotal;
-
-        const invoice = {
+        // ONLY include fields from schemaValidate.js
+        invoice = {
+          client: client._id,
           number: invoiceNumber,
           year: currentDate.getFullYear(),
-          date: currentDate.toISOString(),
-          expiredDate: expiredDate.toISOString(),
-          client: client._id,
-          items: items,
-          taxRate: taxRate,
-          subTotal: subTotal,
-          taxTotal: taxTotal,
-          total: total,
-          currency: 'USD',
-          credit: 0,
-          discount: 0,
-          paymentStatus: 'unpaid',
-          status: i % 4 === 0 ? 'sent' : 'draft', // 25% sent, 75% draft
+          status: i % 4 === 0 ? 'sent' : 'draft',
           notes: `Invoice for services rendered - ${currentDate.toLocaleDateString()}`,
+          expiredDate: expiredDate,
+          date: currentDate,
+          items: items,
+          taxRate: 10
         };
 
         const response = await api.post('/invoice/create', invoice);
@@ -97,6 +84,12 @@ async function seedInvoices() {
         }
       } catch (error) {
         console.log(colors.red(`❌ Error creating invoice: ${error.message}`));
+        if (error.response && error.response.data) {
+          console.log(colors.red(`   Backend Response: ${JSON.stringify(error.response.data, null, 2)}`));
+        }
+        if (i === 0 && invoice) {
+          console.log(colors.yellow(`   Failed Invoice Data: ${JSON.stringify(invoice, null, 2)}`));
+        }
       }
     }
 
@@ -107,6 +100,9 @@ async function seedInvoices() {
   } catch (error) {
     console.error(colors.red('\n❌ Invoice seeding failed!'));
     console.error(colors.red(error.message));
+    if (error.response && error.response.data) {
+      console.log(colors.red(`   Details: ${JSON.stringify(error.response.data, null, 2)}`));
+    }
     throw error;
   }
 }

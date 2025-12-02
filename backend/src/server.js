@@ -59,16 +59,22 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 });
 
 // Graceful shutdown for Cloud Run
-process.on('SIGTERM', () => {
-  console.log('⚠️  SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    console.log('✅ HTTP server closed');
-    mongoose.connection.close(false, () => {
-      console.log('✅ MongoDB connection closed');
-      process.exit(0);
-    });
-  });
+process.on("SIGTERM", async () => {
+  try {
+    console.log("⚠️  SIGTERM signal received: closing HTTP server");
+
+    await new Promise((resolve) => server.close(resolve));
+
+    await mongoose.connection.close();
+    console.log("MongoDB connection closed");
+
+    process.exit(0);
+  } catch (err) {
+    console.error("Error during shutdown:", err);
+    process.exit(1);
+  }
 });
+
 
 // Handle unhandled rejections
 process.on('unhandledRejection', (err) => {

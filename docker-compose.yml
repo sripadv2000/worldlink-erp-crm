@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - DATABASE=mongodb+srv://sripadv2000_db_user:l3zH5FROgfGPDnKD@cluster0.5qhzpwc.mongodb.net/idurar-erp-crm
+      - JWT_SECRET=local_dev_secret_change_in_production_12345678
+      - CORS_ORIGIN=http://localhost:3000
+      - PUBLIC_SERVER_FILE=http://localhost:8888/
+      - OPENSSL_CONF=/dev/null
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_BACKEND_SERVER=http://localhost:8888/
+        - VITE_FILE_BASE_URL=http://localhost:8888/
+    ports:
+      - "3000:8080"
+    depends_on:
+      backend:
+        condition: service_healthy  # Wait for backend to be healthy
+    restart: unless-stopped
