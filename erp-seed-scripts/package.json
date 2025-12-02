@@ -1,0 +1,21 @@
+{
+  "name": "idurar-erp-seed-scripts",
+  "version": "1.0.0",
+  "description": "Seed scripts for IDURAR ERP/CRM system",
+  "main": "seedAll.js",
+  "scripts": {
+    "seed": "node seedAll.js",
+    "seed:clients": "node seedClients.js",
+    "seed:invoices": "node seedInvoices.js",
+    "seed:quotes": "node seedQuotes.js",
+    "seed:payments": "node seedPayments.js",
+    "test": "node testConnection.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "colors": "^1.4.0"
+  }
+}
