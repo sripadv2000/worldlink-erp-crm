@@ -17,15 +17,15 @@ export default function UpgradeButton() {
           float: 'right',
           marginTop: '5px',
           cursor: 'pointer',
-          background: '#16923e',
+          background: '#b11717ff',
           boxShadow: '0 2px 0 rgb(82 196 26 / 20%)',
         }}
         icon={<RocketOutlined />}
         onClick={() => {
-          window.open(`https://entreprise.idurarapp.com`);
+          window.open(`https://worldlink-us.com`);
         }}
       >
-        {translate('Try Entreprise Version')}
+        {translate('WorldLink US')}
       </Button>
     </Badge>
   );
