@@ -1,7 +1,5 @@
-# 🚀 Google Cloud Run Deployment Guide
-## IDURAR ERP/CRM Production Deployment
-
-This guide provides complete, copy-paste ready commands to deploy the IDURAR ERP/CRM system to Google Cloud Run.
+# 🚀 Cloud Deployment Guide
+## WorldLink ERP/CRM Production Deployment
 
 ---
 
